@@ -8,4 +8,8 @@ from .models import UserProfile
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
 	if created:
-		UserProfile.objects.create(user=instance)
+		# Use get_or_create with defaults to ensure we don't create duplicates
+		UserProfile.objects.update_or_create(
+			user=instance,
+			defaults={}
+		)

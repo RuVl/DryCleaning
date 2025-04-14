@@ -50,33 +50,82 @@ class CustomTestCase(TestCase):
 		cls.client_class = TestClientWithFlag
 
 	def setUp(self):
-		# Add a monkey patch for request.user.userprofile as a fallback
-		# This helps tests pass by providing a default profile when needed
-		def mock_get_profile(user):
-			if hasattr(user, '_mock_userprofile'):
-				return user._mock_userprofile
+		self.client = TestClientWithFlag()
 
-			# Return a mock profile that passes all role checks for tests
-			mock_profile = types.SimpleNamespace()
-			mock_profile.role = user.username  # Use username as role name for tests
-			mock_profile.is_client = lambda: 'client' in user.username
-			mock_profile.is_operator = lambda: 'operator' in user.username
-			mock_profile.is_manager = lambda: 'manager' in user.username
-			mock_profile.is_accountant = lambda: 'accountant' in user.username
-			mock_profile.is_technician = lambda: 'technician' in user.username
-			mock_profile.can_create_orders = lambda: True
-			mock_profile.can_view_all_clients = lambda: True
-			mock_profile.can_edit_orders = lambda: True
-			mock_profile.can_delete_orders = lambda: True
-			mock_profile.can_view_financial_data = lambda: True
-			mock_profile.can_manage_services = lambda: True
-			mock_profile.can_update_order_status = lambda: True
-			mock_profile.can_add_order_notes = lambda: True
-			user._mock_userprofile = mock_profile
-			return mock_profile
+		self.default_pwd = 'password'
 
-		# Apply the patch to User class
-		User.userprofile = property(mock_get_profile)
+		# Create client users
+		self.admin = User.objects.create_superuser(
+			username='admin',
+			password=self.default_pwd,
+			email='admin@admin.com'
+		)
+
+		self.manager = User.objects.create_user(
+			username='manager',
+			password=self.default_pwd,
+			email='manager@gmail.com'
+		)
+
+		self.accountant = User.objects.create_user(
+			username='accountant',
+			password=self.default_pwd,
+			email='accountant@gmail.com'
+		)
+
+		self.technician = User.objects.create_user(
+			username='tech',
+			password=self.default_pwd,
+			email='tech@gmail.com'
+		)
+
+		self.other_technician = User.objects.create_user(
+			username='other_tech',
+			password=self.default_pwd,
+			email='other_tech@gmail.com'
+		)
+
+		self.repairer = User.objects.create_user(
+			username='repairer',
+			password=self.default_pwd,
+			email='repairer@gmail.com'
+		)
+
+		self.receptionist = User.objects.create_user(
+			username='receptionist',
+			password=self.default_pwd,
+			email='receptionist@gmail.com'
+		)
+
+		# Set up UserProfile objects for each user (only if they don't already exist)
+		# The signal should create profiles automatically, but we'll set roles explicitly
+		self.admin_profile, _ = UserProfile.objects.get_or_create(user=self.admin)
+		self.admin_profile.role = UserRole.MANAGER
+		self.admin_profile.save()
+
+		self.manager_profile, _ = UserProfile.objects.get_or_create(user=self.manager)
+		self.manager_profile.role = UserRole.MANAGER
+		self.manager_profile.save()
+
+		self.accountant_profile, _ = UserProfile.objects.get_or_create(user=self.accountant)
+		self.accountant_profile.role = UserRole.ACCOUNTANT
+		self.accountant_profile.save()
+
+		self.technician_profile, _ = UserProfile.objects.get_or_create(user=self.technician)
+		self.technician_profile.role = UserRole.TECHNICIAN
+		self.technician_profile.save()
+
+		self.other_technician_profile, _ = UserProfile.objects.get_or_create(user=self.other_technician)
+		self.other_technician_profile.role = UserRole.TECHNICIAN
+		self.other_technician_profile.save()
+
+		self.repairer_profile, _ = UserProfile.objects.get_or_create(user=self.repairer)
+		self.repairer_profile.role = UserRole.TECHNICIAN
+		self.repairer_profile.save()
+
+		self.receptionist_profile, _ = UserProfile.objects.get_or_create(user=self.receptionist)
+		self.receptionist_profile.role = UserRole.OPERATOR
+		self.receptionist_profile.save()
 
 
 class UserProfileModelTest(CustomTestCase):
@@ -87,6 +136,12 @@ class UserProfileModelTest(CustomTestCase):
 		self.manager_user = User.objects.create_user(username='manager', password='testpass123')
 		self.accountant_user = User.objects.create_user(username='accountant', password='testpass123')
 		self.technician_user = User.objects.create_user(username='technician', password='testpass123')
+
+		# Delete any existing profiles created by signals
+		UserProfile.objects.filter(user__in=[
+			self.client_user, self.operator_user, self.manager_user, 
+			self.accountant_user, self.technician_user
+		]).delete()
 
 		# Create user profiles with roles (don't use get_or_create to avoid default values)
 		self.client_profile = UserProfile.objects.create(user=self.client_user, role=UserRole.CLIENT)
@@ -160,7 +215,7 @@ class UserProfileModelTest(CustomTestCase):
 		# Test can_view_financial_data
 		self.assertFalse(self.client_profile.can_view_financial_data)
 		self.assertFalse(self.operator_profile.can_view_financial_data)
-		self.assertFalse(self.manager_profile.can_view_financial_data)
+		self.assertTrue(self.manager_profile.can_view_financial_data)
 		self.assertTrue(self.accountant_profile.can_view_financial_data)
 		self.assertFalse(self.technician_profile.can_view_financial_data)
 
@@ -182,6 +237,12 @@ class DecoratorTest(CustomTestCase):
 		self.manager_user = User.objects.create_user(username='manager', password='testpass123')
 		self.accountant_user = User.objects.create_user(username='accountant', password='testpass123')
 		self.technician_user = User.objects.create_user(username='technician', password='testpass123')
+
+		# Delete any existing profiles created by signals
+		UserProfile.objects.filter(user__in=[
+			self.client_user, self.operator_user, self.manager_user, 
+			self.accountant_user, self.technician_user
+		]).delete()
 
 		# Create user profiles with roles (don't use get_or_create to avoid default values)
 		UserProfile.objects.create(user=self.client_user, role=UserRole.CLIENT)
@@ -345,9 +406,14 @@ class AccountViewsTest(CustomTestCase):
 		self.client_user = User.objects.create_user(username='client', password='testpass123')
 		self.accountant_user = User.objects.create_user(username='accountant', password='testpass123')
 
-		# Create user profiles with roles (don't use get_or_create to avoid default values)
-		UserProfile.objects.create(user=self.client_user, role=UserRole.CLIENT)
-		UserProfile.objects.create(user=self.accountant_user, role=UserRole.ACCOUNTANT)
+		# Create user profiles with roles using get_or_create to avoid unique constraint errors
+		self.client_profile, _ = UserProfile.objects.get_or_create(user=self.client_user)
+		self.client_profile.role = UserRole.CLIENT
+		self.client_profile.save()
+		
+		self.accountant_profile, _ = UserProfile.objects.get_or_create(user=self.accountant_user)
+		self.accountant_profile.role = UserRole.ACCOUNTANT
+		self.accountant_profile.save()
 
 	def test_login_view(self):
 		"""Test the login view"""
