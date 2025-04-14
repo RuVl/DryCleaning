@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Обновление статуса заказа{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'technician_dashboard' %}">Рабочий стол технолога</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Заказ #{{ order.id }}</li>
+                    </ol>
+                </nav>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Обновление статуса заказа #{{ order.id }}</h2>
+                </div>
+                <hr class="my-3">
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Форма обновления</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label for="{{ form.detailed_status.id_for_label }}" class="form-label fw-bold">{{ form.detailed_status.label }}</label>
+                                {{ form.detailed_status }}
+                                <script>document.getElementById("{{ form.detailed_status.id_for_label }}").classList.add("form-select");</script>
+                                {% if form.detailed_status.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.detailed_status.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.technician_notes.id_for_label }}" class="form-label fw-bold">Рабочие заметки</label>
+                                {{ form.technician_notes }}
+                                <script>document.getElementById("{{ form.technician_notes.id_for_label }}").classList.add("form-control");</script>
+                                {% if form.technician_notes.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.technician_notes.errors }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Рабочие заметки видны только персоналу</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.damage_notes.id_for_label }}" class="form-label fw-bold">Примечания о повреждениях</label>
+                                {{ form.damage_notes }}
+                                <script>document.getElementById("{{ form.damage_notes.id_for_label }}").classList.add("form-control");</script>
+                                {% if form.damage_notes.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.damage_notes.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.recommendations.id_for_label }}" class="form-label fw-bold">Рекомендации по уходу</label>
+                                {{ form.recommendations }}
+                                <script>document.getElementById("{{ form.recommendations.id_for_label }}").classList.add("form-control");</script>
+                                {% if form.recommendations.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.recommendations.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-2"></i>Сохранить
+                                </button>
+                                <a href="{% url 'technician_dashboard' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Вернуться
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Информация о заказе</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table mb-0">
+                            <tbody>
+                            <tr>
+                                <td class="fw-bold" style="width: 120px;">Услуга</td>
+                                <td>{{ order.service_type.name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Срочность</td>
+                                <td>
+                                    {% if order.urgency_level == 'high' %}
+                                        <span class="badge bg-danger">{{ order.get_urgency_level_display }}</span>
+                                    {% elif order.urgency_level == 'medium' %}
+                                        <span class="badge bg-warning text-dark">{{ order.get_urgency_level_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ order.get_urgency_level_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Сложность</td>
+                                <td>
+                                    {% if order.complexity_level == 'high' %}
+                                        <span class="badge bg-danger">{{ order.get_complexity_level_display }}</span>
+                                    {% elif order.complexity_level == 'medium' %}
+                                        <span class="badge bg-warning text-dark">{{ order.get_complexity_level_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ order.get_complexity_level_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Дата приема</td>
+                                <td>{{ order.received_at|date:"d.m.Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Текущий статус</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ order.get_detailed_status_display }}</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% if order.description %}
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Описание</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">{{ order.description }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %} 

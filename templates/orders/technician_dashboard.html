@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block title %}Рабочий стол технолога{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Главная</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Рабочий стол технолога</li>
+                    </ol>
+                </nav>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0"><i class="bi bi-tools me-2"></i>Рабочий стол технолога</h2>
+                </div>
+                <hr class="my-3">
+            </div>
+        </div>
+
+        <!-- Assigned Orders -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow border-0">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Мои заказы</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if assigned_orders %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Услуга</th>
+                                        <th>Срочность</th>
+                                        <th>Сложность</th>
+                                        <th>Статус</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for order in assigned_orders %}
+                                        <tr>
+                                            <td>{{ order.id }}</td>
+                                            <td>{{ order.service_type.name }}</td>
+                                            <td>
+                                                {% if order.urgency_level == 'high' %}
+                                                    <span class="badge bg-danger">{{ order.get_urgency_level_display }}</span>
+                                                {% elif order.urgency_level == 'medium' %}
+                                                    <span class="badge bg-warning text-dark">{{ order.get_urgency_level_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">{{ order.get_urgency_level_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if order.complexity_level == 'high' %}
+                                                    <span class="badge bg-danger">{{ order.get_complexity_level_display }}</span>
+                                                {% elif order.complexity_level == 'medium' %}
+                                                    <span class="badge bg-warning text-dark">{{ order.get_complexity_level_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">{{ order.get_complexity_level_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ order.get_detailed_status_display }}</span>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'order_status_update' order.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-pencil-square"></i> Обновить статус
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+                                <h4 class="text-muted">У вас нет назначенных заказов</h4>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unassigned Orders -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow border-0">
+                    <div class="card-header bg-light">
+                        <h4 class="mb-0">Заказы в ожидании обработки</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if unassigned_orders %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Услуга</th>
+                                        <th>Срочность</th>
+                                        <th>Сложность</th>
+                                        <th>Дата приема</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for order in unassigned_orders %}
+                                        <tr>
+                                            <td>{{ order.id }}</td>
+                                            <td>{{ order.service_type.name }}</td>
+                                            <td>
+                                                {% if order.urgency_level == 'high' %}
+                                                    <span class="badge bg-danger">{{ order.get_urgency_level_display }}</span>
+                                                {% elif order.urgency_level == 'medium' %}
+                                                    <span class="badge bg-warning text-dark">{{ order.get_urgency_level_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">{{ order.get_urgency_level_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if order.complexity_level == 'high' %}
+                                                    <span class="badge bg-danger">{{ order.get_complexity_level_display }}</span>
+                                                {% elif order.complexity_level == 'medium' %}
+                                                    <span class="badge bg-warning text-dark">{{ order.get_complexity_level_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">{{ order.get_complexity_level_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ order.received_at|date:"d.m.Y H:i" }}</td>
+                                            <td>
+                                                <a href="{% url 'order_status_update' order.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-plus-circle"></i> Взять в работу
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+                                <h4 class="text-muted">Нет заказов в ожидании обработки</h4>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recently Completed Orders -->
+        {% if completed_orders %}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card shadow border-0">
+                        <div class="card-header bg-light">
+                            <h4 class="mb-0">Недавно выполненные заказы</h4>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Услуга</th>
+                                        <th>Срочность</th>
+                                        <th>Сложность</th>
+                                        <th>Дата выполнения</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for order in completed_orders %}
+                                        <tr>
+                                            <td>{{ order.id }}</td>
+                                            <td>{{ order.service_type.name }}</td>
+                                            <td>
+                                                {% if order.urgency_level == 'high' %}
+                                                    <span class="badge bg-danger">{{ order.get_urgency_level_display }}</span>
+                                                {% elif order.urgency_level == 'medium' %}
+                                                    <span class="badge bg-warning text-dark">{{ order.get_urgency_level_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">{{ order.get_urgency_level_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if order.complexity_level == 'high' %}
+                                                    <span class="badge bg-danger">{{ order.get_complexity_level_display }}</span>
+                                                {% elif order.complexity_level == 'medium' %}
+                                                    <span class="badge bg-warning text-dark">{{ order.get_complexity_level_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">{{ order.get_complexity_level_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ order.completed_at|date:"d.m.Y H:i" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %} 

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Заказ оформлен{% endblock %}
+
+{% block content %}
+    <div class="alert alert-success">
+        <h4 class="alert-heading">Спасибо!</h4>
+        <p>Ваш заказ успешно принят. Мы свяжемся с вами при готовности.</p>
+        <hr>
+        <a href="{% url 'client_dashboard' %}" class="btn btn-primary">Посмотреть мои заказы</a>
+    </div>
+{% endblock %}

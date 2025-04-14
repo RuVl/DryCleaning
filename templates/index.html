@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Химчистка - Профессиональная чистка вещей{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <!-- Hero Section -->
+        <div class="row align-items-center py-4">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <h1 class="display-4 fw-bold mb-3">Профессиональная химчистка вашей одежды</h1>
+                <p class="lead mb-4">Доверьте чистоту ваших вещей профессионалам с многолетним опытом. Качественная химчистка, выведение пятен, бережный уход за любимыми
+                    вещами.</p>
+                <div class="d-grid gap-2 d-md-flex">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'create_order' %}" class="btn btn-primary btn-lg px-4 me-md-2">
+                            <i class="bi bi-plus-circle me-2"></i>Оформить заказ
+                        </a>
+                        <a href="{% url 'client_dashboard' %}" class="btn btn-outline-primary btn-lg px-4">
+                            <i class="bi bi-list-check me-2"></i>Мои заказы
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4 me-md-2">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+                        </a>
+                        <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg px-4">
+                            <i class="bi bi-person-plus me-2"></i>Регистрация
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&h=750&q=80"
+                         class="card-img-top" alt="Химчистка">
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Section -->
+        <div class="row mt-5 pt-5">
+            <div class="col-12 text-center mb-4">
+                <h2 class="fw-bold">Наши услуги</h2>
+                <p class="lead text-muted">Профессиональная чистка любой сложности</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-block mb-3">
+                            <i class="bi bi-droplet-half text-primary fs-2"></i>
+                        </div>
+                        <h4 class="card-title">Химическая чистка</h4>
+                        <p class="card-text">Бережная чистка одежды с использованием современных технологий и безопасных средств.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-block mb-3">
+                            <i class="bi bi-x-circle text-primary fs-2"></i>
+                        </div>
+                        <h4 class="card-title">Выведение пятен</h4>
+                        <p class="card-text">Эффективное удаление даже самых сложных пятен с любых типов тканей.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-block mb-3">
+                            <i class="bi bi-lightning-charge text-primary fs-2"></i>
+                        </div>
+                        <h4 class="card-title">Срочная чистка</h4>
+                        <p class="card-text">Срочная химчистка и выведение пятен в кратчайшие сроки для особых случаев.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benefits Section -->
+        <div class="row mt-5 pt-5">
+            <div class="col-12 text-center mb-4">
+                <h2 class="fw-bold">Наши преимущества</h2>
+                <p class="lead text-muted">Почему выбирают нас</p>
+            </div>
+
+            <div class="col-md-3">
+                <div class="text-center p-3">
+                    <i class="bi bi-stars text-primary fs-1 mb-3"></i>
+                    <h5>Качество</h5>
+                    <p class="text-muted">Гарантируем безупречное качество чистки ваших вещей</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3">
+                    <i class="bi bi-clock text-primary fs-1 mb-3"></i>
+                    <h5>Быстро</h5>
+                    <p class="text-muted">Оперативное выполнение заказов любой сложности</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3">
+                    <i class="bi bi-gem text-primary fs-1 mb-3"></i>
+                    <h5>Профессионализм</h5>
+                    <p class="text-muted">Опытные специалисты с многолетним стажем</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3">
+                    <i class="bi bi-percent text-primary fs-1 mb-3"></i>
+                    <h5>Скидки</h5>
+                    <p class="text-muted">Скидка 3% для постоянных клиентов</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="row mt-5 pt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow bg-primary text-white">
+                    <div class="card-body p-5 text-center">
+                        <h3 class="mb-3">Готовы доверить нам свои вещи?</h3>
+                        <p class="mb-4">Оформите заказ онлайн или посетите ближайший филиал химчистки</p>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'create_order' %}" class="btn btn-light btn-lg px-4">
+                                    <i class="bi bi-plus-circle me-2"></i>Оформить заказ
+                                </a>
+                            {% else %}
+                                <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4">
+                                    <i class="bi bi-person-plus me-2"></i>Регистрация
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

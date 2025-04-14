@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% load order_filters %}
+{% block title %}Заказ #{{ order.id }}{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'all_orders' %}">Заказы</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Заказ #{{ order.id }}</li>
+                    </ol>
+                </nav>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Заказ #{{ order.id }}</h2>
+                    <div>
+                        {% if user.is_staff and order.status != 'completed' %}
+                            <a href="{% url 'order_edit' order.id %}" class="btn btn-outline-primary me-2">
+                                <i class="bi bi-pencil me-1"></i>Редактировать
+                            </a>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-arrow-right-circle me-1"></i>Изменить статус
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'order_set_status' order.id 'pending' %}">Ожидание</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'order_set_status' order.id 'in_progress' %}">В работе</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'order_set_status' order.id 'completed' %}">Выполнен</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item" href="{% url 'order_set_status' order.id 'cancelled' %}">Отменен</a></li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <hr class="my-3">
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Информация о заказе</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table mb-0">
+                            <tbody>
+                            <tr>
+                                <td class="fw-bold" style="width: 200px;">Услуга</td>
+                                <td>{{ order.service_type.name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Филиал</td>
+                                <td>{{ order.branch.name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Дата приема</td>
+                                <td>{{ order.received_at|date:"d.m.Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Срочность</td>
+                                <td>
+                                    {% if order.urgency_level == 'high' %}
+                                        <span class="badge bg-danger">{{ order.get_urgency_level_display }}</span>
+                                    {% elif order.urgency_level == 'medium' %}
+                                        <span class="badge bg-warning text-dark">{{ order.get_urgency_level_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ order.get_urgency_level_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Сложность</td>
+                                <td>
+                                    {% if order.complexity_level == 'high' %}
+                                        <span class="badge bg-danger">{{ order.get_complexity_level_display }}</span>
+                                    {% elif order.complexity_level == 'medium' %}
+                                        <span class="badge bg-warning text-dark">{{ order.get_complexity_level_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ order.get_complexity_level_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Статус</td>
+                                <td>
+                                    {% if order.status == 'completed' %}
+                                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'in_progress' %}
+                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if order.completed_at %}
+                                <tr>
+                                    <td class="fw-bold">Дата завершения</td>
+                                    <td>{{ order.completed_at|date:"d.m.Y H:i" }}</td>
+                                </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="fw-bold">Итоговая стоимость</td>
+                                <td class="fs-5 fw-bold text-primary">{{ order.final_price }} ₽</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% if order.description %}
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Описание</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">{{ order.description }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Информация о клиенте</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>ФИО:</strong>
+                            <p class="mt-1">{{ order.client.last_name }} {{ order.client.first_name }} {{ order.client.patronymic }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Телефон:</strong>
+                            <p class="mt-1"><a href="tel:{{ order.client.phone }}">{{ order.client.phone }}</a></p>
+                        </div>
+                        {% if order.client.email %}
+                            <div class="mb-3">
+                                <strong>Email:</strong>
+                                <p class="mt-1"><a href="mailto:{{ order.client.email }}">{{ order.client.email }}</a></p>
+                            </div>
+                        {% endif %}
+                        {% if order.client.address %}
+                            <div class="mb-3">
+                                <strong>Адрес:</strong>
+                                <p class="mt-1">{{ order.client.address }}</p>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <strong>Статус клиента:</strong>
+                            <p class="mt-1">
+                                {% if order.client.is_regular %}
+                                    <span class="badge bg-success">Постоянный клиент</span>
+                                    <small class="text-muted d-block mt-1">Скидка: {{ order.client.discount }}%</small>
+                                {% else %}
+                                    <span class="badge bg-secondary">Обычный клиент</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if user.is_staff %}
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0">Расчет стоимости</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Базовая стоимость:</span>
+                                    <span>{{ order.service_type.base_price }} ₽</span>
+                                </li>
+                                {% if order.urgency_level != 'low' %}
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Надбавка за срочность:</span>
+                                        <span>
+                                {% if order.urgency_level == 'high' %}
+                                    +30% ({{ order.service_type.base_price|floatformat:2 }} × 0.3 = {{ order.service_type.base_price|multiply:0.3|floatformat:2 }} ₽)
+                                {% elif order.urgency_level == 'medium' %}
+                                    +15% ({{ order.service_type.base_price|floatformat:2 }} × 0.15 = {{ order.service_type.base_price|multiply:0.15|floatformat:2 }} ₽)
+                                {% endif %}
+                            </span>
+                                    </li>
+                                {% endif %}
+                                {% if order.complexity_level != 'low' %}
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Надбавка за сложность:</span>
+                                        <span>
+                                {% if order.complexity_level == 'high' %}
+                                    +20% ({{ order.service_type.base_price|floatformat:2 }} × 0.2 = {{ order.service_type.base_price|floatformat:2|multiply:0.2 }} ₽)
+                                {% elif order.complexity_level == 'medium' %}
+                                    +10% ({{ order.service_type.base_price|floatformat:2 }} × 0.1 = {{ order.service_type.base_price|floatformat:2|multiply:0.1 }} ₽)
+                                {% endif %}
+                            </span>
+                                    </li>
+                                {% endif %}
+                                {% if order.client.is_regular %}
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Скидка постоянного клиента:</span>
+                                        <span>-3%</span>
+                                    </li>
+                                {% endif %}
+                                <li class="list-group-item d-flex justify-content-between fw-bold">
+                                    <span>Итоговая стоимость:</span>
+                                    <span>{{ order.final_price }} ₽</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %} 

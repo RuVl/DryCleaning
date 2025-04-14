@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Ежемесячный отчет{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'staff_dashboard' %}">Панель управления</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Ежемесячный отчет</li>
+                    </ol>
+                </nav>
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <h2 class="mb-0"><i class="bi bi-calendar-month me-2"></i>Отчет за {{ month_name }} {{ year }}</h2>
+
+                    <form method="get" class="d-flex mt-2 mt-md-0">
+                        <select name="month" class="form-select me-2">
+                            {% for m in available_months %}
+                                <option value="{{ m.0 }}" {% if month == m.0 %}selected{% endif %}>{{ m.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="year" class="form-select me-2">
+                            {% for y in available_years %}
+                                <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary">Показать</button>
+                    </form>
+                </div>
+                <hr class="my-3">
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">Всего заказов</h5>
+                        <h2 class="display-4 fw-bold">{{ total_orders }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">Выполнено</h5>
+                        <h2 class="display-4 fw-bold text-success">{{ completed_orders }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">Доход</h5>
+                        <h2 class="display-4 fw-bold text-primary">{{ monthly_income | floatformat:2 }} ₽</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">Новых клиентов</h5>
+                        <h2 class="display-4 fw-bold text-info">{{ new_clients }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0">Доход по дням</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th>День</th>
+                                    <th>Заказов</th>
+                                    <th>Доход</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for day_data in daily_stats %}
+                                    <tr>
+                                        <td>{{ day_data.date|date:"d.m.Y" }}</td>
+                                        <td>{{ day_data.orders_count }}</td>
+                                        <td>{{ day_data.income | floatformat:2 }} ₽</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">Нет данных за выбранный период</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0">Заказы по филиалам</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th>Филиал</th>
+                                    <th>Заказов</th>
+                                    <th>Доход</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for branch_data in branch_stats %}
+                                    <tr>
+                                        <td>{{ branch_data.branch__name }}</td>
+                                        <td>{{ branch_data.orders_count }}</td>
+                                        <td>{{ branch_data.income | floatformat:2 }} ₽</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">Нет данных за выбранный период</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

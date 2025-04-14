@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Прайс-лист услуг{% endblock %}
+
+{% block content %}
+    <div class="container py-4"
+         data-urgency-surcharge="{{ urgency_surcharge }}"
+         data-complexity-surcharge="{{ complexity_surcharge }}"
+         data-regular-discount="{{ regular_discount }}">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Прайс-лист услуг</h2>
+                    <a href="{% url 'create_order' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Оформить заказ
+                    </a>
+                </div>
+                <hr class="my-3">
+            </div>
+        </div>
+
+        <!-- Price Information -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="bi bi-info-circle-fill fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="alert-heading">Система ценообразования</h5>
+                            <p class="mb-0">Окончательная стоимость услуги зависит от нескольких факторов:</p>
+                            <ul class="mb-0 mt-2">
+                                <li>Базовая стоимость услуги</li>
+                                <li>Надбавка за срочность: <span class="badge bg-warning text-dark">+{{ urgency_surcharge }}%</span> к базовой стоимости</li>
+                                <li>Надбавка за сложность: <span class="badge bg-warning text-dark">+{{ complexity_surcharge }}%</span> к базовой стоимости</li>
+                                <li>Скидка для постоянных клиентов: <span class="badge bg-success">-{{ regular_discount }}%</span> от общей стоимости (с 3-го обращения)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price Cards -->
+        {% if service_types %}
+            {% regroup service_types by category as service_type_list %}
+
+            <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+                {% for type in service_type_list %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-primary text-white py-3">
+                                <h5 class="mb-0 text-center">{{ type.grouper }}</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush">
+                                    {% for service in type.list %}
+                                        <li class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>{{ service.name }}</span>
+                                                <span class="fw-bold">{{ service.base_price }} ₽</span>
+                                            </div>
+                                            {% if service.description %}
+                                                <small class="text-muted d-block mt-1">{{ service.description|truncatechars:60 }}</small>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center p-5">
+                    <i class="bi bi-exclamation-circle fs-1 text-muted mb-3 d-block"></i>
+                    <h4 class="text-muted">Прайс-лист пуст</h4>
+                    <p class="mb-4">В данный момент услуги не добавлены</p>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Price Calculator -->
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow border-0">
+                    <div class="card-header bg-light">
+                        <h4 class="mb-0">Калькулятор стоимости</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="priceCalculator" class="row g-3">
+                            <div class="col-md-6">
+                                <label for="serviceSelect" class="form-label">Выберите услугу</label>
+                                <select class="form-select" id="serviceSelect">
+                                    <option selected disabled value="">Выберите услугу...</option>
+                                    {% for service in service_types %}
+                                        <option value="{{ service.id }}" data-price="{{ service.base_price }}">{{ service.name }} ({{ service.base_price }} ₽)</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Срочность выполнения</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="urgencyCheck">
+                                    <label class="form-check-label" for="urgencyCheck">
+                                        Срочный заказ (+{{ urgency_surcharge }}%)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Сложность выполнения</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="complexityCheck">
+                                    <label class="form-check-label" for="complexityCheck">
+                                        Сложное загрязнение (+{{ complexity_surcharge }}%)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Статус клиента</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="regularClientCheck">
+                                    <label class="form-check-label" for="regularClientCheck">
+                                        Постоянный клиент (-{{ regular_discount }}%)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button type="button" class="btn btn-primary" id="calculateBtn">Рассчитать стоимость</button>
+                            </div>
+                        </form>
+
+                        <div class="mt-4 d-none" id="resultBox">
+                            <div class="alert alert-success">
+                                <h5 class="alert-heading">Результат расчета</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1">Базовая стоимость: <span id="basePrice">0</span> ₽</p>
+                                        <p class="mb-1">Надбавка за срочность: <span id="urgencySurcharge">0</span> ₽</p>
+                                        <p class="mb-1">Надбавка за сложность: <span id="complexitySurcharge">0</span> ₽</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1">Промежуточная сумма: <span id="subtotal">0</span> ₽</p>
+                                        <p class="mb-1">Скидка постоянного клиента: <span id="discount">0</span> ₽</p>
+                                        <p class="mb-0 fw-bold">Итоговая стоимость: <span id="totalPrice" class="fs-5">0</span> ₽</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+			document.addEventListener('DOMContentLoaded', function () {
+				const calculateBtn = document.getElementById('calculateBtn');
+
+				calculateBtn.addEventListener('click', function () {
+					const container = document.querySelector('.container');
+					const serviceSelect = document.getElementById('serviceSelect');
+					const urgencyCheck = document.getElementById('urgencyCheck');
+					const complexityCheck = document.getElementById('complexityCheck');
+					const regularClientCheck = document.getElementById('regularClientCheck');
+					const resultBox = document.getElementById('resultBox');
+
+					if (serviceSelect.value === '') {
+						alert('Пожалуйста, выберите услугу');
+						return;
+					}
+
+					// Get parameters from data attributes
+					const urgencySurchargePercent = parseFloat(container.dataset.urgencySurcharge) || 30;
+					const complexitySurchargePercent = parseFloat(container.dataset.complexitySurcharge) || 20;
+					const regularDiscountPercent = parseFloat(container.dataset.regularDiscount) || 3;
+
+					// Calculate prices
+					const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+					const basePrice = parseFloat(selectedOption.dataset.price);
+
+					// Ensure basePrice is a valid number
+					if (isNaN(basePrice)) {
+						console.error('Invalid base price:', selectedOption.dataset.price);
+						return;
+					}
+
+					const urgencySurcharge = urgencyCheck.checked ? (basePrice * urgencySurchargePercent / 100) : 0;
+					const complexitySurcharge = complexityCheck.checked ? (basePrice * complexitySurchargePercent / 100) : 0;
+					const subtotal = basePrice + urgencySurcharge + complexitySurcharge;
+					const discount = regularClientCheck.checked ? (subtotal * regularDiscountPercent / 100) : 0;
+					const totalPrice = subtotal - discount;
+
+					// Update UI
+					document.getElementById('basePrice').textContent = basePrice.toFixed(2);
+					document.getElementById('urgencySurcharge').textContent = urgencySurcharge.toFixed(2);
+					document.getElementById('complexitySurcharge').textContent = complexitySurcharge.toFixed(2);
+					document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+					document.getElementById('discount').textContent = discount.toFixed(2);
+					document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
+
+					resultBox.classList.remove('d-none');
+				});
+			});
+    </script>
+{% endblock %} 

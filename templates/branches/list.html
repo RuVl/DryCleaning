@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Наши филиалы{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0"><i class="bi bi-geo-alt-fill me-2"></i>Наши филиалы</h2>
+                    {% if user.is_staff %}
+                        <a href="{% url 'branch_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Добавить филиал
+                        </a>
+                    {% endif %}
+                </div>
+                <hr class="my-3">
+            </div>
+        </div>
+
+        {% if branches %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for branch in branches %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm position-relative">
+                            {% if user.is_staff %}
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn-light btn-sm rounded-circle" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="{% url 'branch_edit' branch.id %}">
+                                                <i class="bi bi-pencil me-2"></i>Изменить
+                                            </a></li>
+                                            <li><a class="dropdown-item text-danger" href="{% url 'branch_delete' branch.id %}">
+                                                <i class="bi bi-trash me-2"></i>Удалить
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if branch.image %}
+                                <img src="{{ branch.image.url }}" class="card-img-top" alt="{{ branch.name }}" height="180">
+                            {% else %}
+                                <div class="bg-light text-center py-5">
+                                    <i class="bi bi-building text-secondary" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+
+                            <div class="card-body">
+                                <h5 class="card-title">{{ branch.name }}</h5>
+                                <p class="card-text text-muted mb-1">
+                                    <i class="bi bi-geo-alt me-1"></i>{{ branch.address }}
+                                </p>
+                                <p class="card-text text-muted mb-3">
+                                    <i class="bi bi-telephone me-1"></i>{{ branch.phone }}
+                                </p>
+                                <h6>Часы работы:</h6>
+                                <p class="small">{{ branch.opening_hours }}</p>
+                            </div>
+
+                            <div class="card-footer bg-white border-top-0">
+                                <a href="{% url 'branch_detail' branch.id %}" class="btn btn-outline-primary w-100">
+                                    <i class="bi bi-info-circle me-1"></i>Подробнее
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center p-5">
+                    <i class="bi bi-geo-alt fs-1 text-muted mb-3 d-block"></i>
+                    <h4 class="text-muted">Филиалы не найдены</h4>
+                    <p class="mb-4">В данный момент информация о филиалах отсутствует</p>
+                    {% if user.is_staff %}
+                        <a href="{% url 'branch_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Добавить филиал
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %} 

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Отчет по услугам{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'staff_dashboard' %}">Панель управления</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Отчет по услугам</li>
+                    </ol>
+                </nav>
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <h2 class="mb-0"><i class="bi bi-tag me-2"></i>Отчет по услугам</h2>
+
+                    <form method="get" class="d-flex mt-2 mt-md-0">
+                        <select name="period" class="form-select me-2">
+                            <option value="all" {% if period == 'all' %}selected{% endif %}>За все время</option>
+                            <option value="year" {% if period == 'year' %}selected{% endif %}>За текущий год</option>
+                            <option value="month" {% if period == 'month' %}selected{% endif %}>За текущий месяц</option>
+                            <option value="week" {% if period == 'week' %}selected{% endif %}>За текущую неделю</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Показать</button>
+                    </form>
+                </div>
+                <hr class="my-3">
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">Всего выполненных заказов</h5>
+                        <h2 class="display-4 fw-bold">{{ total_orders }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">Общий доход</h5>
+                        <h2 class="display-4 fw-bold text-primary">{{ total_income | floatformat:2 }} ₽</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">Видов услуг</h5>
+                        <h2 class="display-4 fw-bold text-info">{{ services.count }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0">Статистика по услугам</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th>Услуга</th>
+                                    <th>Количество заказов</th>
+                                    <th>Доля</th>
+                                    <th>Доход</th>
+                                    <th>Средний чек</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for service in services %}
+                                    <tr>
+                                        <td>{{ service.name }}</td>
+                                        <td>{{ service.orders_count }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" role="progressbar" style="width: {{ service.percentage }}%;"
+                                                     aria-valuenow="{{ service.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                                    {{ service.percentage }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ service.total_income | floatformat:2 }} ₽</td>
+                                        <td>
+                                            {% if service.orders_count > 0 %}
+                                                {{ service.avg_check | floatformat:2 }} ₽
+                                            {% else %}
+                                                0 ₽
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Нет данных за выбранный период</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0">Распределение заказов</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height:400px;">
+                            <!-- Visualization could be added here using Chart.js or other library -->
+                            <div class="alert alert-info">
+                                Для визуализации данных можно подключить библиотеку Chart.js и отобразить графики распределения заказов и доходов по услугам.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 
