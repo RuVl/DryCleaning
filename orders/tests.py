@@ -1,16 +1,23 @@
+import time
+import unittest
 from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.wait import WebDriverWait
 
+from accounts.models import UserProfile, UserRole
 from accounts.tests import CustomTestCase
 from branches.models import Branch
 from clients.models import Client
 from services.models import ServiceType
 from .forms import OrderForm, OrderTechnicianForm
 from .models import Order, OrderStatus
-from accounts.models import UserProfile, UserRole
 
 
 class OrderModelTest(TestCase):
@@ -222,24 +229,24 @@ class OrderTechnicianFormTest(TestCase):
 class OrderViewTest(CustomTestCase):
 	def setUp(self):
 		super().setUp()
-		
+
 		# Get users with different roles that were created in the parent setUp
 		self.client_user, _ = User.objects.get_or_create(username='client')
 		self.client_user.set_password('testpass123')
 		self.client_user.save()
-		
+
 		self.operator_user, _ = User.objects.get_or_create(username='operator')
-		self.operator_user.set_password('testpass123') 
+		self.operator_user.set_password('testpass123')
 		self.operator_user.save()
-		
+
 		self.manager_user, _ = User.objects.get_or_create(username='manager')
 		self.manager_user.set_password('testpass123')
 		self.manager_user.save()
-		
+
 		self.technician_user, _ = User.objects.get_or_create(username='technician')
 		self.technician_user.set_password('testpass123')
 		self.technician_user.save()
-		
+
 		self.accountant_user, _ = User.objects.get_or_create(username='accountant')
 		self.accountant_user.set_password('testpass123')
 		self.accountant_user.save()
@@ -248,7 +255,7 @@ class OrderViewTest(CustomTestCase):
 		operator_profile, _ = UserProfile.objects.get_or_create(user=self.operator_user)
 		operator_profile.role = UserRole.OPERATOR
 		operator_profile.save()
-		
+
 		technician_profile, _ = UserProfile.objects.get_or_create(user=self.technician_user)
 		technician_profile.role = UserRole.TECHNICIAN
 		technician_profile.save()
@@ -367,7 +374,7 @@ class OrderBusinessLogicTest(CustomTestCase):
 		self.user, _ = User.objects.get_or_create(username='testclient')
 		self.user.set_password('testpass123')
 		self.user.save()
-		
+
 		self.client_profile, _ = Client.objects.get_or_create(
 			user=self.user,
 			defaults={
@@ -459,3 +466,48 @@ class OrderBusinessLogicTest(CustomTestCase):
 
 		# The final price should include the discount
 		self.assertAlmostEqual(latest_order.final_price, expected_price, places=2)
+
+
+class DryCleaningUITest(unittest.TestCase):
+	def setUp(self):
+		options = webdriver.ChromeOptions()
+		# options.add_argument('--headless')  # отключено для визуального теста
+		self.driver = webdriver.Chrome(options=options)
+		self.driver.maximize_window()
+		self.driver.get('http://127.0.0.1:8000')
+
+	def test_login_and_create_order(self):
+		driver = self.driver
+
+		# 1. Переход на страницу входа
+		driver.find_element(By.LINK_TEXT, "Вход").click()
+
+		# 2. Заполнение формы входа
+		driver.find_element(By.ID, "id_username").send_keys("admin")
+		driver.find_element(By.ID, "id_password").send_keys("admin")
+		driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+
+		# 3. Переход на страницу создания заказа
+		WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.LINK_TEXT, "Оформить заказ")))
+		driver.find_element(By.LINK_TEXT, "Оформить заказ").click()
+
+		# 4. Заполнение формы заказа
+		WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.NAME, "service_type")))
+		Select(driver.find_element(By.NAME, "service_type")).select_by_index(1)
+		Select(driver.find_element(By.NAME, "branch")).select_by_index(1)
+		Select(driver.find_element(By.NAME, "urgency_level")).select_by_value("medium")
+		Select(driver.find_element(By.NAME, "complexity_level")).select_by_value("medium")
+
+		driver.find_element(By.NAME, "description").send_keys("Сдать пальто на химчистку")
+		
+		# 5. Отправка формы
+		time.sleep(2)  # оставить паузу для наблюдения
+		driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+
+		# 6. Проверка, что перешли на страницу успеха
+		WebDriverWait(driver, 5).until(EC.title_contains("Заказ оформлен"))
+		self.assertIn("заказ оформлен", driver.page_source.lower())
+
+	def tearDown(self):
+		time.sleep(2)  # оставить паузу для наблюдения
+		self.driver.quit()

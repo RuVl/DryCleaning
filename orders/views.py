@@ -17,24 +17,13 @@ from .models import Order, OrderStatus
 
 @login_required
 def create_order(request):
-	# Check if user has appropriate role (client, operator, or manager)
-	is_test = getattr(request, '_is_test_client', False)
-
-	if not is_test:
-		# Check if user is client, operator, or manager
-		profile = getattr(request.user, 'userprofile', None)
-		is_client = hasattr(request.user, 'client')
-
-		if not (is_client or (profile and (profile.is_operator or profile.is_manager))):
-			raise PermissionDenied("У вас нет прав для создания заказа")
-
-		# Check if user has a client profile
-		try:
-			client = request.user.client
-		except (Client.DoesNotExist, AttributeError):
-			# Redirect to create client profile if it doesn't exist
-			messages.warning(request, 'Пожалуйста, заполните информацию о себе перед оформлением заказа')
-			return redirect('create_client_profile')
+	# Check if user has a client profile
+	try:
+		client = request.user.client
+	except (Client.DoesNotExist, AttributeError):
+		# Redirect to create client profile if it doesn't exist
+		messages.warning(request, 'Пожалуйста, заполните информацию о себе перед оформлением заказа')
+		return redirect('create_client_profile')
 
 	if request.method == 'POST':
 		form = OrderForm(request.POST)
@@ -42,8 +31,7 @@ def create_order(request):
 			order = form.save(commit=False)
 
 			# Set the client for the order
-			if not is_test:
-				order.client = request.user.client
+			order.client = request.user.client
 
 			# Make sure branch is set
 			if not order.branch:
@@ -76,7 +64,7 @@ def create_order(request):
 			total_price = base_price + complexity_surcharge + urgency_surcharge
 
 			# Apply discount for regular customers (3 or more previous orders)
-			if not is_test and request.user.client.is_regular:
+			if request.user.client.is_regular:
 				discount = total_price * Decimal('0.03')  # 3% discount
 				total_price -= discount
 
@@ -199,14 +187,13 @@ def order_edit(request, order_id):
 
 	# Only managers can edit orders, or test client flag is set
 	profile = getattr(request.user, 'userprofile', None)
-	is_test = getattr(request, '_is_test_client', False)
 
 	# Check if user is accountant (deny access)
 	if profile and profile.role == 'accountant':
 		raise PermissionDenied("У вас нет прав для редактирования заказа")
 
 	# For non-test cases, check manager role
-	if not is_test and (not profile or not profile.is_manager):
+	if not profile or not profile.is_manager:
 		raise PermissionDenied("У вас нет прав для редактирования заказа")
 
 	if request.method == 'POST':

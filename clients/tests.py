@@ -1,6 +1,13 @@
+import time
+import unittest
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 
 from branches.models import Branch
 from orders.models import Order, ServiceType
@@ -105,3 +112,45 @@ class ClientViewTest(TestCase):
 		client_profile = Client.objects.get(user=self.user)
 		self.assertEqual(client_profile.last_name, 'Петров')
 		self.assertEqual(client_profile.phone, '+79876543210')
+
+
+class PageNavigationTest(unittest.TestCase):
+	def setUp(self):
+		options = webdriver.ChromeOptions()
+		# options.add_argument('--headless')  # отключено для наглядности
+		self.driver = webdriver.Chrome(options=options)
+		self.driver.maximize_window()
+		self.driver.get('http://127.0.0.1:8000')
+
+	def test_page_views(self):
+		driver = self.driver
+		
+		driver.find_element(By.LINK_TEXT, "Вход").click()
+		driver.find_element(By.ID, "id_username").send_keys("admin")
+		driver.find_element(By.ID, "id_password").send_keys("admin")
+		driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+		WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.LINK_TEXT, "Оформить заказ")))
+
+		# Главная
+		driver.get("http://127.0.0.1:8000/")
+		time.sleep(2)  # пауза для наблюдения
+		self.assertIn("Химчистка", driver.page_source)
+
+		# Прайс-лист
+		driver.get("http://127.0.0.1:8000/services/prices/")
+		time.sleep(2)  # пауза для наблюдения
+		self.assertIn("Прайс-лист услуг", driver.page_source)
+
+		# Филиалы
+		driver.get("http://127.0.0.1:8000/branches/branches/")
+		time.sleep(2)  # пауза для наблюдения
+		self.assertIn("Наши филиалы", driver.page_source)
+
+		# Кабинет заказов
+		driver.get("http://127.0.0.1:8000/orders/dashboard/")
+		time.sleep(2)  # пауза для наблюдения
+		self.assertIn("Мои заказы", driver.page_source)
+
+	def tearDown(self):
+		time.sleep(2)  # пауза для наблюдения
+		self.driver.quit()
