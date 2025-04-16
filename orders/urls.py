@@ -14,4 +14,6 @@ urlpatterns = [
 	# Technician routes
 	path('technician/dashboard/', views.technician_dashboard, name='technician_dashboard'),
 	path('technician/<int:order_id>/update/', views.order_status_update, name='order_status_update'),
+
+	path('export/csv/', views.export_orders_csv, name='export_orders_csv'),
 ]

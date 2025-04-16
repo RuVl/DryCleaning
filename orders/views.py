@@ -1,8 +1,11 @@
+import csv
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
@@ -334,3 +337,57 @@ def order_status_update(request, order_id):
 		form = OrderTechnicianForm(instance=order)
 
 	return render(request, 'orders/order_status_update.html', {'form': form, 'order': order})
+
+
+@login_required
+@manager_required
+def export_orders_csv(request):
+	import csv
+	from django.utils import timezone
+	from datetime import date, timedelta
+
+	response = HttpResponse(content_type='text/csv')
+	response['Content-Disposition'] = 'attachment; filename="orders.csv"'
+
+	writer = csv.writer(response, delimiter=';')
+	writer.writerow(['ID', 'Клиент', 'Услуга', 'Филиал', 'Дата приёма', 'Статус', 'Цена', 'Описание'])
+
+	orders = Order.objects.all()
+
+	# Фильтрация как в all_orders
+	status = request.GET.get('status')
+	branch = request.GET.get('branch')
+	period = request.GET.get('period')
+
+	if status:
+		orders = orders.filter(status=status)
+
+	if branch:
+		orders = orders.filter(branch_id=branch)
+
+	if period:
+		today = timezone.now().date()
+		if period == 'today':
+			orders = orders.filter(received_at__date=today)
+		elif period == 'week':
+			start = today - timedelta(days=today.weekday())
+			orders = orders.filter(received_at__date__gte=start)
+		elif period == 'month':
+			start = date(today.year, today.month, 1)
+			orders = orders.filter(received_at__date__gte=start)
+
+	# Пишем в CSV
+	for order in orders:
+		writer.writerow([
+			order.id,
+			order.client.full_name,
+			order.service_type.name,
+			order.branch.name if order.branch else '',
+			order.received_at.strftime('%Y-%m-%d'),
+			order.get_status_display(),
+			order.final_price,
+			order.description or ''
+		])
+
+	return response
+
